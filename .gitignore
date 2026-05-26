@@ -5,6 +5,7 @@ apps/*.apk
 .maestro/*
 !.maestro/config.yaml
 maestro-report.xml
+maestro-ci-output/
 *.png
 
 # Local secrets / overrides

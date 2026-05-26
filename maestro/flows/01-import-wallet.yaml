@@ -18,8 +18,10 @@ appId: io.metamask
 - pressKey: Enter
 - tapOn: "Continue"
 
-# MetaMask password screen — two fields, checkbox, then submit button
-- assertVisible: "MetaMask password"
+# MetaMask password screen — CI emulator can be slower than local
+- extendedWaitUntil:
+    visible: "MetaMask password"
+    timeout: 5000
 - tapOn: "create-password-first-input-field"
 - inputText: ${TEST_PASSWORD}
 - tapOn: "create-password-second-input-field"

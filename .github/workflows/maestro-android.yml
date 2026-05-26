@@ -44,10 +44,25 @@ jobs:
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
 
-      - name: Run emulator and Maestro tests
+      # Base64 avoids shell-quoting issues for multi-word seed in emulator script
+      - name: Prepare test credentials
         env:
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
           TEST_SEED_PHRASE: ${{ secrets.TEST_SEED_PHRASE }}
+        run: |
+          if [ -z "${TEST_PASSWORD}" ] || [ -z "${TEST_SEED_PHRASE}" ]; then
+            echo "::error::TEST_PASSWORD or TEST_SEED_PHRASE secret is empty"
+            exit 1
+          fi
+          word_count=$(echo "${TEST_SEED_PHRASE}" | wc -w | tr -d ' ')
+          echo "Seed phrase word count: ${word_count}"
+          if [ "${word_count}" -ne 12 ]; then
+            echo "::warning::Expected 12 seed words, got ${word_count}"
+          fi
+          echo "TEST_PASSWORD_B64=$(printf '%s' "${TEST_PASSWORD}" | base64 -w0)" >> "${GITHUB_ENV}"
+          echo "TEST_SEED_PHRASE_B64=$(printf '%s' "${TEST_SEED_PHRASE}" | base64 -w0)" >> "${GITHUB_ENV}"
+
+      - name: Run emulator and Maestro tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -56,15 +71,31 @@ jobs:
           profile: pixel_6
           ram-size: 4096M
           script: |
-            export PATH="$HOME/.maestro/bin:$PATH"
+            set -euo pipefail
+            export PATH="${HOME}/.maestro/bin:${PATH}"
+            export TEST_PASSWORD="$(printf '%s' "${TEST_PASSWORD_B64}" | base64 -d)"
+            export TEST_SEED_PHRASE="$(printf '%s' "${TEST_SEED_PHRASE_B64}" | base64 -d)"
+            if [ -z "${TEST_PASSWORD}" ] || [ -z "${TEST_SEED_PHRASE}" ]; then
+              echo "ERROR: decoded credentials are empty"
+              exit 1
+            fi
             adb install -r apps/metamask.apk
-            maestro test maestro/flows/01-import-wallet.yaml -e "TEST_PASSWORD=${TEST_PASSWORD}" -e "TEST_SEED_PHRASE=${TEST_SEED_PHRASE}"
-            maestro test maestro/flows/02-login-with-password.yaml -e "TEST_PASSWORD=${TEST_PASSWORD}" -e "TEST_SEED_PHRASE=${TEST_SEED_PHRASE}" --format junit --output maestro-report.xml
+            mkdir -p maestro-ci-output
+            maestro test \
+              maestro/flows/01-import-wallet.yaml \
+              maestro/flows/02-login-with-password.yaml \
+              -e "TEST_PASSWORD=${TEST_PASSWORD}" \
+              -e "TEST_SEED_PHRASE=${TEST_SEED_PHRASE}" \
+              --test-output-dir maestro-ci-output \
+              --debug-output maestro-ci-output \
+              --format html \
+              --output maestro-ci-output/report.html
+            cp -a "${HOME}/.maestro/tests/." maestro-ci-output/maestro-debug/ 2>/dev/null || true
 
-      - name: Upload JUnit report
+      - name: Upload Maestro report (HTML + failure screenshots)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: maestro-junit
-          path: maestro-report.xml
+          name: maestro-report
+          path: maestro-ci-output/
           if-no-files-found: ignore
