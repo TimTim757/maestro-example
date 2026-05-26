@@ -168,7 +168,7 @@ Flows use **`${TEST_SEED_PHRASE}`** and **`${TEST_PASSWORD}`**.
 | Environment | How variables are set |
 |-------------|------------------------|
 | **Scripts** | `.env.local` loaded by `scripts/env.sh` → `maestro test -e ...` in `run-maestro.sh` |
-| **CI** | `-e` flags in the workflow (public BIP39 test vector + `TestPassword123!`) |
+| **CI** | GitHub Actions secrets `TEST_PASSWORD` and `TEST_SEED_PHRASE` (Settings → Secrets and variables → Actions) |
 | **Maestro Studio** | Does **not** read `.env.local` — use `./scripts/maestro-studio.sh` or Studio **Env** → add the same keys |
 
 ```bash
