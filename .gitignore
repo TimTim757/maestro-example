@@ -1,0 +1,22 @@
+# MetaMask APK is not committed (place manually at apps/metamask.apk)
+apps/*.apk
+
+# Maestro / test artifacts (keep .maestro/config.yaml in git)
+.maestro/*
+!.maestro/config.yaml
+maestro-report.xml
+*.png
+
+# Local secrets / overrides
+.env.local
+
+# Personal docs
+docs/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+
+

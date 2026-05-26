@@ -1,0 +1,6 @@
+# Maestro workspace config — strict scenario order.
+executionOrder:
+  continueOnFailure: false
+  flowsOrder:
+    - 01-import-wallet
+    - 02-login-with-password

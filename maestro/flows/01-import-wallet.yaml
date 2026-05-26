@@ -1,0 +1,52 @@
+# Scenario 1: Import wallet with TEST_SEED_PHRASE, set password, reach home.
+# Credentials: .env.local + scripts/run-maestro.sh (-e), or Maestro Studio Environments,
+# or the defaults below (public test vector — same as .env.example).
+appId: io.metamask
+---
+- launchApp:
+    clearState: true
+
+- tapOn:
+    text: "I have an existing wallet"
+- tapOn:
+    text: "Import using Secret Recovery Phrase"
+
+# Enter seed phrase (typed from TEST_SEED_PHRASE — no clipboard needed)
+- tapOn:
+    text: "Add a space between each word and make sure no one is watching."
+- inputText: ${TEST_SEED_PHRASE}
+- pressKey: Enter
+- tapOn: "Continue"
+
+# MetaMask password screen — two fields, checkbox, then submit button
+- assertVisible: "MetaMask password"
+- tapOn: "create-password-first-input-field"
+- inputText: ${TEST_PASSWORD}
+- tapOn: "create-password-second-input-field"
+- inputText: ${TEST_PASSWORD}
+
+# Checkbox is required before the submit button enables
+- tapOn:
+    point: 8%,47%
+
+- pressKey: Enter
+- tapOn:
+    text: "Create password"
+    index: 1
+
+# Continue on "Improve Metamask" screen
+- tapOn: "Continue"
+
+# Tap Done on "Your wallet is ready"
+- tapOn: "Done"
+
+# Dismiss update modal if it appears
+- tapOn:
+    id: "update-needed-modal-close-button"
+# Dismiss advertisment 
+- assertVisible: "PREDICT AND WIN"
+- tapOn: "Not now"
+
+# Confirm wallet home
+- assertVisible: "Add funds"
+

@@ -1,0 +1,71 @@
+name: Maestro Android
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  # Pinned prod APK — must match local flows (v7.72.0)
+  METAMASK_APK_URL: https://github.com/MetaMask/metamask-mobile/releases/download/v7.72.0/metamask-blockchain-wall-android3-7.72.0-metamask-main-prod-4333.apk
+
+jobs:
+  maestro-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Download MetaMask APK
+        run: |
+          mkdir -p apps
+          curl -fL "${METAMASK_APK_URL}" -o apps/metamask.apk
+          ls -lh apps/metamask.apk
+          test -s apps/metamask.apk
+
+      - name: Install Maestro CLI
+        run: |
+          export MAESTRO_VERSION=1.40.0
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Run emulator and Maestro tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 4096M
+          script: |
+            adb install -r apps/metamask.apk
+            maestro test maestro/flows/01-import-wallet.yaml \
+              -e TEST_PASSWORD="TestPassword123!" \
+              -e TEST_SEED_PHRASE="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+            maestro test maestro/flows/02-login-with-password.yaml \
+              -e TEST_PASSWORD="TestPassword123!" \
+              -e TEST_SEED_PHRASE="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about" \
+              --format junit --output maestro-report.xml
+
+      - name: Upload JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-junit
+          path: maestro-report.xml
+          if-no-files-found: ignore
