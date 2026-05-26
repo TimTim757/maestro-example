@@ -45,6 +45,9 @@ jobs:
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
 
       - name: Run emulator and Maestro tests
+        env:
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          TEST_SEED_PHRASE: ${{ secrets.TEST_SEED_PHRASE }}
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -55,8 +58,8 @@ jobs:
           script: |
             export PATH="$HOME/.maestro/bin:$PATH"
             adb install -r apps/metamask.apk
-            maestro test maestro/flows/01-import-wallet.yaml -e TEST_PASSWORD="${{ secrets.TEST_PASSWORD }}" -e TEST_SEED_PHRASE="${{ secrets.TEST_SEED_PHRASE }}"
-            maestro test maestro/flows/02-login-with-password.yaml -e TEST_PASSWORD="${{ secrets.TEST_PASSWORD }}" -e TEST_SEED_PHRASE="${{ secrets.TEST_SEED_PHRASE }}" --format junit --output maestro-report.xml
+            maestro test maestro/flows/01-import-wallet.yaml -e "TEST_PASSWORD=${TEST_PASSWORD}" -e "TEST_SEED_PHRASE=${TEST_SEED_PHRASE}"
+            maestro test maestro/flows/02-login-with-password.yaml -e "TEST_PASSWORD=${TEST_PASSWORD}" -e "TEST_SEED_PHRASE=${TEST_SEED_PHRASE}" --format junit --output maestro-report.xml
 
       - name: Upload JUnit report
         if: always()
