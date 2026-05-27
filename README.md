@@ -151,7 +151,7 @@ Execution order is enforced in [`scripts/run-maestro.sh`](scripts/run-maestro.sh
 | Path | Role |
 |------|------|
 | [`maestro/flows/`](maestro/flows/) | Maestro YAML scenarios |
-| [`scripts/`](scripts/) | Emulator, install, test runner, Studio helper |
+| [`scripts/`](scripts/) | Emulator, install, test runner, Studio helper; [`ci-maestro-android.sh`](scripts/ci-maestro-android.sh) runs tests inside CI emulator |
 | [`apps/metamask.apk`](apps/metamask.apk) | Pinned APK (you add; gitignored) |
 | [`.env.example`](.env.example) | Template for `.env.local` |
 | [`.maestro/config.yaml`](.maestro/config.yaml) | Flow execution order |
