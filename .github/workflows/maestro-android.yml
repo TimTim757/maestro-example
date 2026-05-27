@@ -70,26 +70,16 @@ jobs:
           arch: x86_64
           profile: pixel_6
           ram-size: 4096M
+          # android-emulator-runner runs each line as a separate `sh -c` — no multiline if/fi or \
           script: |
             set -eu
             export PATH="${HOME}/.maestro/bin:${PATH}"
             export TEST_PASSWORD="$(printf '%s' "${TEST_PASSWORD_B64}" | base64 -d)"
             export TEST_SEED_PHRASE="$(printf '%s' "${TEST_SEED_PHRASE_B64}" | base64 -d)"
-            if [ -z "${TEST_PASSWORD}" ] || [ -z "${TEST_SEED_PHRASE}" ]; then
-              echo "ERROR: decoded credentials are empty"
-              exit 1
-            fi
+            [ -n "${TEST_PASSWORD}" ] && [ -n "${TEST_SEED_PHRASE}" ] || { echo "ERROR: decoded credentials are empty"; exit 1; }
             adb install -r apps/metamask.apk
             mkdir -p maestro-ci-output
-            maestro test \
-              maestro/flows/01-import-wallet.yaml \
-              maestro/flows/02-login-with-password.yaml \
-              -e "TEST_PASSWORD=${TEST_PASSWORD}" \
-              -e "TEST_SEED_PHRASE=${TEST_SEED_PHRASE}" \
-              --test-output-dir maestro-ci-output \
-              --debug-output maestro-ci-output \
-              --format html \
-              --output maestro-ci-output/report.html
+            maestro test maestro/flows/01-import-wallet.yaml maestro/flows/02-login-with-password.yaml -e "TEST_PASSWORD=${TEST_PASSWORD}" -e "TEST_SEED_PHRASE=${TEST_SEED_PHRASE}" --test-output-dir maestro-ci-output --debug-output maestro-ci-output --format html --output maestro-ci-output/report.html
             cp -a "${HOME}/.maestro/tests/." maestro-ci-output/maestro-debug/ 2>/dev/null || true
 
       - name: Upload Maestro report (HTML + failure screenshots)
