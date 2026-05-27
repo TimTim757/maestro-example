@@ -25,13 +25,12 @@ cd "${REPO_ROOT}"
 adb install -r apps/metamask.apk
 mkdir -p maestro-ci-output
 
+# Maestro 1.40.0: no --test-output-dir; failure screenshots go to ~/.maestro/tests
 maestro test \
   maestro/flows/01-import-wallet.yaml \
   maestro/flows/02-login-with-password.yaml \
   -e "TEST_PASSWORD=${TEST_PASSWORD}" \
   -e "TEST_SEED_PHRASE=${TEST_SEED_PHRASE}" \
-  --test-output-dir maestro-ci-output \
-  --debug-output maestro-ci-output \
   --format html \
   --output maestro-ci-output/report.html
 
