@@ -71,7 +71,7 @@ jobs:
           profile: pixel_6
           ram-size: 4096M
           script: |
-            set -euo pipefail
+            set -eu
             export PATH="${HOME}/.maestro/bin:${PATH}"
             export TEST_PASSWORD="$(printf '%s' "${TEST_PASSWORD_B64}" | base64 -d)"
             export TEST_SEED_PHRASE="$(printf '%s' "${TEST_SEED_PHRASE_B64}" | base64 -d)"
