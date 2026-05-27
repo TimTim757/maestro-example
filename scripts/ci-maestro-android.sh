@@ -22,16 +22,40 @@ fi
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${REPO_ROOT}"
 
+MAESTRO_OUT="${REPO_ROOT}/maestro-ci-output"
+mkdir -p "${MAESTRO_OUT}/artifacts" "${MAESTRO_OUT}/reports"
+
+collect_artifacts() {
+  if [[ -d "${HOME}/.maestro/tests" ]]; then
+    mkdir -p "${MAESTRO_OUT}/maestro-debug"
+    cp -a "${HOME}/.maestro/tests/." "${MAESTRO_OUT}/maestro-debug/" || true
+  fi
+  echo "CI artifact layout:"
+  find "${MAESTRO_OUT}" -type f 2>/dev/null | head -50 || true
+}
+trap collect_artifacts EXIT
+
 adb install -r apps/metamask.apk
-mkdir -p maestro-ci-output
 
-# Maestro 1.40.0: no --test-output-dir; failure screenshots go to ~/.maestro/tests
-maestro test \
-  maestro/flows/01-import-wallet.yaml \
-  maestro/flows/02-login-with-password.yaml \
-  -e "TEST_PASSWORD=${TEST_PASSWORD}" \
-  -e "TEST_SEED_PHRASE=${TEST_SEED_PHRASE}" \
-  --format html \
-  --output maestro-ci-output/report.html
+MAESTRO_ENV=(
+  -e "TEST_PASSWORD=${TEST_PASSWORD}"
+  -e "TEST_SEED_PHRASE=${TEST_SEED_PHRASE}"
+)
 
-cp -a "${HOME}/.maestro/tests/." maestro-ci-output/maestro-debug/ 2>/dev/null || true
+run_maestro_flow() {
+  local slug="$1"
+  local flow="$2"
+  local art_dir="${MAESTRO_OUT}/artifacts/${slug}"
+  mkdir -p "${art_dir}"
+
+  echo "=== Maestro: ${slug} ==="
+  maestro test "${flow}" "${MAESTRO_ENV[@]}" \
+    --test-output-dir "${art_dir}" \
+    --debug-output "${art_dir}" \
+    --flatten-debug-output \
+    --format html-detailed \
+    --output "${MAESTRO_OUT}/reports/${slug}.html"
+}
+
+run_maestro_flow "01-import-wallet" maestro/flows/01-import-wallet.yaml
+run_maestro_flow "02-login-with-password" maestro/flows/02-login-with-password.yaml

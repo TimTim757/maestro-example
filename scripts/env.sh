@@ -50,7 +50,7 @@ fi
 AVD_NAME="metamask_maestro"
 EMULATOR_PROFILE="pixel_6"
 
-MAESTRO_VERSION="1.40.0"
+MAESTRO_VERSION="2.5.1"
 
 # App under test
 APP_ID="io.metamask"

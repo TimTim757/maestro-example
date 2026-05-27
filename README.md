@@ -256,10 +256,18 @@ Flows do **not** use `takeScreenshot`. Maestro captures the screen automatically
 ### GitHub Actions (CI)
 
 1. Open your repo on GitHub → **Actions** → click the failed **Maestro Android** run.  
-2. Scroll to **Artifacts** at the bottom of the run page.  
-3. Download **`maestro-report`** (zip).  
-4. Unzip and open **`report.html`** in a browser — failed steps include embedded screenshots.  
-5. For extra detail, look in the same zip under **`maestro-debug/`** (copy of `~/.maestro/tests/`) for raw PNGs and logs.
+2. Scroll to **Artifacts** → download **`maestro-report`** (zip).  
+3. Inside the zip:
+
+   | Path | Contents |
+   |------|----------|
+   | **`reports/01-import-wallet.html`** | Step-by-step report for scenario 1 (open this first if import fails) |
+   | **`reports/02-login-with-password.html`** | Step-by-step report for scenario 2 |
+   | **`artifacts/01-import-wallet/`** | Failure screenshots, `commands-*.json`, `maestro.log` |
+   | **`artifacts/02-login-with-password/`** | Same for scenario 2 |
+   | **`maestro-debug/`** | Fallback copy of `~/.maestro/tests/` (if present) |
+
+4. **Do not** use a single `report.html` from `maestro test maestro/flows/` with `--format html` — that format only shows a **flow list summary** (pass/fail counts), not per-step screenshots. CI runs each flow separately with **`html-detailed`**.
 
 On a **green** CI run, `maestro-report` is still uploaded but will mostly contain logs/metadata, not failure screenshots.
 
@@ -280,9 +288,9 @@ On push/PR to `main`:
 
 1. KVM + Java 17  
 2. Download [MetaMask APK v7.72.0](https://github.com/MetaMask/metamask-mobile/releases/download/v7.72.0/metamask-blockchain-wall-android3-7.72.0-metamask-main-prod-4333.apk) into `apps/metamask.apk` (`METAMASK_APK_URL` in [`.github/workflows/maestro-android.yml`](.github/workflows/maestro-android.yml))  
-3. Install Maestro `1.40.0`  
-4. `android-emulator-runner` — API 34, install APK, run both flows in one `maestro test`  
-5. Upload **`maestro-report`** artifact (`report.html` + debug output; screenshots appear when a step fails)  
+3. Install Maestro `2.5.1`  
+4. `android-emulator-runner` — API 34, install APK, run flows **one at a time** via `scripts/ci-maestro-android.sh`  
+5. Upload **`maestro-report`** artifact (`reports/*.html`, `artifacts/*`, optional `maestro-debug/`)  
 
 The APK is **not** in git (too large); CI downloads it from the MetaMask Mobile release URL on each run.
 
@@ -301,7 +309,7 @@ See **Screenshots on failure** above for where to find images after a failed run
 | `Unable to launch app io.metamask: null` | Close Studio; `adb devices`; reinstall APK |
 | Scenario 2 fails alone | Run scenario 1 first in the same emulator session |
 | Assertion on **Add funds** / **MetaMask password** | UI changed — update YAML; use Studio for selectors |
-| CI fails on **MetaMask password** | Check `TEST_SEED_PHRASE` secret (12 words, one line); download **maestro-report** artifact and open `report.html` |
+| CI fails on **MetaMask password** | Check `TEST_SEED_PHRASE` secret (12 words, one line); download **maestro-report** → `reports/01-import-wallet.html` and `artifacts/01-import-wallet/` PNGs |
 | Apple Silicon image error | Confirm `arm64-v8a` in `scripts/env.sh` |
 | Slow emulator (Linux) | KVM / host acceleration |
 

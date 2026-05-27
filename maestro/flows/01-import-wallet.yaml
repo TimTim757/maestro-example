@@ -18,10 +18,8 @@ appId: io.metamask
 - pressKey: Enter
 - tapOn: "Continue"
 
-# MetaMask password screen — CI emulator can be slower than local
-- extendedWaitUntil:
-    visible: "MetaMask password"
-    timeout: 5000
+# MetaMask password screen
+- assertVisible: "MetaMask password"
 - tapOn: "create-password-first-input-field"
 - inputText: ${TEST_PASSWORD}
 - tapOn: "create-password-second-input-field"
@@ -42,12 +40,13 @@ appId: io.metamask
 # Tap Done on "Your wallet is ready"
 - tapOn: "Done"
 
-# Dismiss update modal if it appears
+# Dismiss update modal / ads if they appear (optional on CI)
 - tapOn:
     id: "update-needed-modal-close-button"
-# Dismiss advertisment 
-- assertVisible: "PREDICT AND WIN"
-- tapOn: "Not now"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
 
 # Confirm wallet home
 - assertVisible: "Add funds"
